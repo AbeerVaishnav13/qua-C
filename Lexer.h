@@ -5,9 +5,16 @@
 #define BRACKET_CONDITION_CLOSE(c) (c == ')' || c == ']' || c == '}')
 
 #define PUNCTUATION_CONDITION(c) (c == '=' || c == '<' || c == '>' || c == ',' || \
-                                    c == '-' || c == ':' || c == '.' || c == '|')
+                                    c == '-' || c == ':' || c == ';' || c == '|' || c == '~')
 
 void assignType(HashMap *hm, char buf[]) {
+    bool Float = false;
+    int i;
+
+    for(i = 0; buf[i] != '\0'; i++)
+        if(buf[i] == '.')
+            Float = true;
+
     if(!strcmp(buf, "{")) {insertHM(hm, buf, CMPND_STMT_OPEN);}
     else if(!strcmp(buf, "{")) {insertHM(hm, buf, CMPND_STMT_OPEN);}
     else if(!strcmp(buf, "}")) {insertHM(hm, buf, CMPND_STMT_CLOSE);}
@@ -75,13 +82,19 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "S")) {insertHM(hm, buf, PHASE);}
     else if(buf[0] == 'R' && buf[1] == '_' && isdigit(buf[2])) {insertHM(hm, buf, ROTATION);}
     else if(!strcmp(buf, "Sx")) {insertHM(hm, buf, SWAP);}
+    else if(Float) {insertHM(hm, buf, FLOAT_LITERAL);}
     else if(isdigit(buf[0])) {insertHM(hm, buf, INT_LITERAL);}
-    else if(buf[0] == '"') {insertHM(hm, buf, STRING_LITERAL);}
+    else if(buf[0] == '"') {
+        int i;
+        for(i = 0; buf[i] != '\0'; i++);
+        buf[i-1] = '\0';
+        insertHM(hm, (buf+1), STRING_LITERAL);
+    }
     else {insertHM(hm, buf, IDENTIFIER);}
 }
 
 HashMap* scanFile(FILE *fp) {
-	bool alpha = false, digit = false, punct = false, bracket_open = false, bracket_close = false;
+	bool alpha = false, digit = false, punct = false, bracket_open = false, bracket_close = false, dot = false;
     bool range = false;
 	char buf[80];
 	int j = 0;
@@ -91,84 +104,85 @@ HashMap* scanFile(FILE *fp) {
 
     while((c = fgetc(fp)) != EOF) {
         if(c == '#') {
-            while((c = fgetc(fp)) != '\n');
-            c = fgetc(fp);
+            while((c = fgetc(fp)) != '\n' || c == EOF);
         }
-		if(isalpha(c) || c == '_') {
-            // printf("Entered alpha\n");
+		else if(isalpha(c) || c == '_') {
             while(isalpha(c) || c == '_') {
-                if(punct || digit || bracket_open || bracket_close) {
-                    punct = digit = bracket_open = bracket_close = false;
+                if(punct || digit || bracket_open || bracket_close || dot) {
+                    punct = digit = bracket_open = bracket_close = dot = false;
                     buf[j] = '\0';
                     if(buf[0] != '\0') {assignType(hm, buf);}
-                    // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                     j = 0;
                 }
                 alpha = true;
                 buf[j++] = c;
-                // printf("\talpha: %s\n", buf);
 
                 c = fgetc(fp);
             }
             fseek(fp, -1, SEEK_CUR);
 		}
 		else if(isdigit(c)) {
-            // printf("Entered digit\n");
             while(isdigit(c)) {
                 if(alpha) {
                     buf[j++] = c;
                 }
-                else if(punct || bracket_open || bracket_close) {
-                    punct = bracket_open = bracket_close = false;
+                else if(punct || bracket_open || bracket_close || dot) {
+                    punct = bracket_open = bracket_close = dot = false;
                     buf[j] = '\0';
                     if(buf[0] != '\0') {assignType(hm, buf);}
-                    // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                     j = 0;
                 }
-                if(!alpha && !bracket_open && !bracket_close && !punct) {
+                if(!alpha && !bracket_open && !bracket_close && !punct && !dot) {
                     digit = true;
                     buf[j++] = c;
                 }
-                // printf("\tdigit: %s\n", buf);
 
                 c = fgetc(fp);
             }
             fseek(fp, -1, SEEK_CUR);
 		}
-		else if(PUNCTUATION_CONDITION(c)) {
+        else if(c == '.') {
             char ch = fgetc(fp);
             fseek(fp, -1, SEEK_CUR);
-            // printf("Entered punct\n");
+
+            if(digit && ch != '.') {
+                buf[j++] = c;
+            }
+            else if(alpha || bracket_close || bracket_open || punct || digit) {
+                alpha = bracket_close = bracket_open = punct = digit = false;
+                buf[j] = '\0';
+                if(buf[0] != '\0') {assignType(hm, buf);}
+                j = 0;
+
+                dot = true;
+                buf[j++] = c;
+            }
+            else if(dot) {
+                buf[j++] = c;
+            }
+        }
+		else if(PUNCTUATION_CONDITION(c)) {
             while(PUNCTUATION_CONDITION(c)) {
-                // printf("buf[j-1] = %c\n", buf[j-1]);
-                if(buf[0] == 'R' && buf[1] == '_') {
-                    buf[j++] = c;
-                }
-                else if(alpha || digit || bracket_open || bracket_close) {
-                    alpha = digit = bracket_open = bracket_close = false;
+                if(alpha || digit || bracket_open || bracket_close || dot) {
+                    alpha = digit = bracket_open = bracket_close = dot = false;
                     buf[j] = '\0';
                     if(buf[0] != '\0') {assignType(hm, buf);}
-                    // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                     j = 0;
                 }
-                else {
-                    punct = true;
-                    buf[j++] = c;
-                }
-                // printf("\tpunct: %s\n", buf);
+
+                punct = true;
+                buf[j++] = c;
 
                 c = fgetc(fp);
             }
             fseek(fp, -1, SEEK_CUR);
 		}
         else if(BRACKET_CONDITION_OPEN(c)) {
-            // printf("Entered bracket\n");
             while (BRACKET_CONDITION_OPEN(c)) {
-                if(alpha || digit || punct || bracket_close) {
-                    alpha = digit = punct = bracket_close = false;
+                if(alpha || digit || punct || bracket_close || dot) {
+                    alpha = digit = punct = bracket_close = dot = false;
                     buf[j] = '\0';
                     if(buf[0] != '\0') {assignType(hm, buf);}
-                    // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                     j = 0;
                 }
                 bracket_open = true;
@@ -180,20 +194,17 @@ HashMap* scanFile(FILE *fp) {
                     j = 0;
                     fseek(fp, -1, SEEK_CUR);
                 }
-                // printf("\tbracket: %s\n", buf);
 
                 c = fgetc(fp);
             }
             fseek(fp, -1, SEEK_CUR);
         }
         else if(BRACKET_CONDITION_CLOSE(c)) {
-            // printf("Entered bracket\n");
             while (BRACKET_CONDITION_CLOSE(c)) {
-                if(alpha || digit || punct || bracket_open) {
-                    alpha = digit = punct = bracket_open = false;
+                if(alpha || digit || punct || bracket_open || dot) {
+                    alpha = digit = punct = bracket_open = dot = false;
                     buf[j] = '\0';
                     if(buf[0] != '\0') {assignType(hm, buf);}
-                    // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                     j = 0;
                 }
                 bracket_close = true;
@@ -205,7 +216,6 @@ HashMap* scanFile(FILE *fp) {
                     j = 0;
                     fseek(fp, -1, SEEK_CUR);
                 }
-                // printf("\tbracket: %s\n", buf);
 
                 c = fgetc(fp);
             }
@@ -213,12 +223,12 @@ HashMap* scanFile(FILE *fp) {
         }
         else if(c == '"') {
             if(alpha || digit || punct || bracket_close || bracket_open) {
-                alpha = digit = punct = bracket_close = bracket_open = false;
+                alpha = digit = punct = bracket_close = bracket_open = dot = false;
                 buf[j] = '\0';
                 if(buf[0] != '\0') {assignType(hm, buf);}
-                // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
                 j = 0;
             }
+
             buf[j++] = c;
             while((c = fgetc(fp)) != '"') {
                 buf[j++] = c;
@@ -226,18 +236,16 @@ HashMap* scanFile(FILE *fp) {
             buf[j] = c;
             buf[j+1] = '\0';
             if(buf[0] != '\0') {assignType(hm, buf);}
-            // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
             j = 0;
         }
 		else if(c == ' ' || c == '\n' || c == '\t') {
-            // printf("Entered space\n");
             while(c == ' ' || c == '\n' || c == '\t') {
-                alpha = digit = punct = bracket_open = bracket_close = false;
-                buf[j] = '\0';
-                if(buf[0] != '\0') {assignType(hm, buf);}
-                // printf("%s : %s\n", hm->kt[hm->len-1].key, Types_str[hm->kt[hm->len-1].type]);
-                j = 0;
-                // printf("\tspace: %s\n", buf);
+                if(alpha || digit || punct || bracket_close || bracket_open || dot) {
+                    alpha = digit = punct = bracket_open = bracket_close = dot = false;
+                    buf[j] = '\0';
+                    if(buf[0] != '\0') {assignType(hm, buf);}
+                    j = 0;
+                }
 
                 c = fgetc(fp);
             }
