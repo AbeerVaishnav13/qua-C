@@ -31,7 +31,7 @@ typedef enum t {
     REAL, IMAG, // qr[0].real
     RETURN, // return
     SAVE, // save
-    INT, CHAR, BOOL, VOID, // Int, Char, Bool, Void
+    INT, CHAR, BOOL, VOID, FLOAT,// Int, Char, Bool, Void, Float
     WHILE, //while
 
     // OPERATORS

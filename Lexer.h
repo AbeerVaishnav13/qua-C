@@ -249,9 +249,16 @@ HashMap* scanFile(FILE *fp) {
 
                 c = fgetc(fp);
             }
-            char ch;
-            if((ch = fgetc(fp)) != EOF) {
+            char ch = fgetc(fp);
+            if(ch != EOF) {
             	fseek(fp, -2, SEEK_CUR);
+            }
+            else if(ch == EOF && (c != '\n' || c == ' ' || c == '\t')) {
+                alpha = digit = punct = bracket_open = bracket_close = dot = false;
+                buf[j++] = c;
+                buf[j] = '\0';
+                if(buf[0] != '\0') {assignType(hm, buf);}
+                j = 0;
             }
 		}
 	}
