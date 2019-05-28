@@ -10,6 +10,10 @@
 #include "Types.h"
 #include "HashMap.h"
 #include "Lexer.h"
-#include "Parser.h"
+
+#include "Grammer.h"
+#include "Stack.h"
+#include "SyntaxAnalyser.h"
+#include "AbstractSyntaxTree.h"
 
 #endif

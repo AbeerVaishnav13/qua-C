@@ -17,7 +17,7 @@ typedef enum t {
     EXPR_PARANTHESIS_OPEN, EXPR_PARANTHESIS_CLOSE, // (.)
     FOR, // for
     FUNC, //func
-    GATE_SEPARATOR, // ([H | H])
+    GATE_SEPARATOR, // (H | H)
     IDENTIFIER_DOT, // arr[0].param
     IDX_BRACKET_OPEN, IDX_BRACKET_CLOSE, // [.]
     IF, // if
@@ -28,7 +28,6 @@ typedef enum t {
     QUREG, // quReg
     QUBIT, // quBit
     RANGE, // (2...10)
-    REAL, IMAG, // qr[0].real
     RETURN, // return
     SAVE, // save
     INT, CHAR, BOOL, VOID, FLOAT,// Int, Char, Bool, Void, Float
@@ -37,7 +36,7 @@ typedef enum t {
     // OPERATORS
     APPLY_GATES, // (->)
     INC, DEC, NEG, BIT_AND, BIT_OR, BIT_EXOR, BIT_INV, // Unary operators
-    ADD, SUB, MULT, DIV, ASSIGN, /* <- */ EQUALS, GT, LT, GTET, LTET, AND, OR, ADD_ASSIGN, SUB_ASSIGN, // Binary Operators
+    ADD, SUB, MULT, DIV, ASSIGN, /* <- */ EQUALS, N_EQUALS, GT, LT, GTET, LTET, AND, OR, ADD_ASSIGN, SUB_ASSIGN, // Binary Operators
     IF_THEN_ELSE, // Ternary operator
     TX_TO_FUNC, // (<=)
     RX_FROM_FUNC, // (=>)
@@ -58,9 +57,10 @@ typedef enum t {
 }Type;
 
 char Types_str[74][23] = {
+    // CLASSES
     "IDENTIFIER", // function/variable name
-    "INT_LITERAL", // interger number
-    "FLOAT_LITERAL", // interger number
+    "INT_LITERAL", // integer number
+    "FLOAT_LITERAL", // float number
     "STRING_LITERAL", // "surrounded by double quotes"
 
     // TOKENS
@@ -72,7 +72,7 @@ char Types_str[74][23] = {
     "EXPR_PARANTHESIS_OPEN", "EXPR_PARANTHESIS_CLOSE", // (.)
     "FOR", // for
     "FUNC", //func
-    "GATE_SEPARATOR", // ([H | H])
+    "GATE_SEPARATOR", // (H | H)
     "IDENTIFIER_DOT", // arr[0].param
     "IDX_BRACKET_OPEN", "IDX_BRACKET_CLOSE", // [.]
     "IF", // if
@@ -83,16 +83,15 @@ char Types_str[74][23] = {
     "QUREG", // quReg
     "QUBIT", // quBit
     "RANGE", // (2...10)
-    "REAL", "IMAG", // qr[0].real
     "RETURN", // return
     "SAVE", // save
-    "INT", "CHAR", "BOOL", "VOID", // Int, Char, Bool, Void
+    "INT", "CHAR", "BOOL", "VOID", "FLOAT",// Int, Char, Bool, Void, Float
     "WHILE", //while
 
     // OPERATORS
     "APPLY_GATES", // (->)
     "INC", "DEC", "NEG", "BIT_AND", "BIT_OR", "BIT_EXOR", "BIT_INV", // Unary operators
-    "ADD", "SUB", "MULT", "DIV", "ASSIGN",  /* <- */ "EQUALS", "GT", "LT", "GTET", "LTET", "AND", "OR", "ADD_ASSIGN", "SUB_ASSIGN", // Binary Operators
+    "ADD", "SUB", "MULT", "DIV", "ASSIGN", /* <- */ "EQUALS", "N_EQUALS", "GT", "LT", "GTET", "LTET", "AND", "OR", "ADD_ASSIGN", "SUB_ASSIGN", // Binary Operators
     "IF_THEN_ELSE", // Ternary operator
     "TX_TO_FUNC", // (<=)
     "RX_FROM_FUNC", // (=>)

@@ -40,8 +40,6 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "quReg")) {insertHM(hm, buf, QUREG);}
     else if(!strcmp(buf, "quBit")) {insertHM(hm, buf, QUBIT);}
     else if(!strcmp(buf, "...")) {insertHM(hm, buf, RANGE);}
-    else if(!strcmp(buf, "real")) {insertHM(hm, buf, REAL);}
-    else if(!strcmp(buf, "imag")) {insertHM(hm, buf, IMAG);}
     else if(!strcmp(buf, "return")) {insertHM(hm, buf, RETURN);}
     else if(!strcmp(buf, "save")) {insertHM(hm, buf, SAVE);}
     else if(!strcmp(buf, "Int")) {insertHM(hm, buf, INT);}
@@ -53,6 +51,7 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "++")) {insertHM(hm, buf, INC);}
     else if(!strcmp(buf, "--")) {insertHM(hm, buf, DEC);}
     else if(!strcmp(buf, "&")) {insertHM(hm, buf, BIT_AND);}
+    else if(!strcmp(buf, "`")) {insertHM(hm, buf, BIT_INV);}
     else if(!strcmp(buf, "^")) {insertHM(hm, buf, BIT_EXOR);}
     else if(!strcmp(buf, "+")) {insertHM(hm, buf, ADD);}
     else if(!strcmp(buf, "-")) {insertHM(hm, buf, SUB);}
@@ -60,11 +59,12 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "/")) {insertHM(hm, buf, DIV);}
     else if(!strcmp(buf, "<-")) {insertHM(hm, buf, ASSIGN);}
     else if(!strcmp(buf, "==")) {insertHM(hm, buf, EQUALS);}
+    else if(!strcmp(buf, "!=")) {insertHM(hm, buf, N_EQUALS);}
     else if(!strcmp(buf, ">")) {insertHM(hm, buf, GT);}
     else if(!strcmp(buf, "<")) {insertHM(hm, buf, LT);}
     else if(!strcmp(buf, ">=")) {insertHM(hm, buf, GTET);}
-    else if(!strcmp(buf, "&&")) {insertHM(hm, buf, AND);}
-    else if(!strcmp(buf, "||")) {insertHM(hm, buf, OR);}
+    else if(!strcmp(buf, "and")) {insertHM(hm, buf, AND);}
+    else if(!strcmp(buf, "or")) {insertHM(hm, buf, OR);}
     else if(!strcmp(buf, "+=")) {insertHM(hm, buf, ADD_ASSIGN);}
     else if(!strcmp(buf, "-=")) {insertHM(hm, buf, SUB_ASSIGN);}
     else if(!strcmp(buf, "?")) {insertHM(hm, buf, IF_THEN_ELSE);}
@@ -93,7 +93,7 @@ void assignType(HashMap *hm, char buf[]) {
     else {insertHM(hm, buf, IDENTIFIER);}
 }
 
-HashMap* scanFile(FILE *fp) {
+HashMap* Tokenize(FILE *fp) {
 	bool alpha = false, digit = false, punct = false, bracket_open = false, bracket_close = false, dot = false;
     bool range = false;
 	char buf[80];
