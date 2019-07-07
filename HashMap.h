@@ -58,4 +58,14 @@ void displayMap(HashMap hm) {
     }
 }
 
+Type* toArrayofTypes(HashMap hm) {
+    Type *t = (Type*) malloc(hm.len * sizeof(Type));
+    int i;
+    for(i = 0; i < hm.len; i++)  {
+        t[i] = hm.kt[i].type;
+    }
+
+    return t;
+}
+
 #endif

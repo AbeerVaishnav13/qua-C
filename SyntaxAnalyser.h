@@ -1,40 +1,24 @@
 #ifndef SYNTAXANALYSER_H
 #define SYNTAXANALYSER_H
 
-#define IS_DATATYPE(d) (d == INT || d == CHAR || d == FLOAT || \
-                        d ==  BOOL || d == QUREG || d == QUBIT)
+#include "Stack.h"
+#include "Types.h"
+#include "Grammer.h"
+#include "HashMap.h"
 
-bool reduce(Stack *s, Production *p, int len) {
-    int *buf = (int*) malloc(len * sizeof(int));
+#define IS_DATATYPE(d) (d == VAR || d == VAL || d == QUREG || d == QUBIT)
+
+bool parse(Stack *s, int start, int end, unsigned int hashed_prod, int len, unsigned int alpha[], unsigned int beta[]){
     int j, k;
 
-    if(len-1 > s->top) {
-        printf("\nlen = %d > s->top", len);
-        return false;
-    }
-
-    for(j = 0; j < len; j++) {
-        buf[len-j-1] = s->type[s->top - j];
-        printf("Copied in buffer: %d", len);
-    }
-
-    int start, end;
-    if(len == 1) {start = 0; end = ONE_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 2) {start = ONE_PRODUCTION; end = TWO_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 3) {start = TWO_PRODUCTION; end = THREE_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 4) {start = THREE_PRODUCTION; end = FOUR_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 5) {start = FOUR_PRODUCTION; end = FIVE_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 8) {start = FIVE_PRODUCTION; end = EIGHT_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-    else if(len == 9) {start = EIGHT_PRODUCTION; end = NINE_PRODUCTION; printf("\nstart = %d, end = %d", start, end);}
-
     for(j = start; j < end; j++) {
-        printf("Entered loop");
-        if(isEqual(p[j].beta, buf, len)) {
-            printf("Matched a production!");
+        // printf("Entered loop");
+        if(beta[j] == hashed_prod) {
+            printf("\n\n\nMatched a production!");
             if(s->type[s->top] == functions && s->top == 0) {
                 s->type[s->top] = library;
             }
-            else if(len == 1 && buf[0] == IDENTIFIER) {
+            else if(len == 1 && hashed_prod == hashItSingle(IDENTIFIER)) {
                 int a = pop(s);
                 printf("\nPopped: %s", ((a < 74) ? Types_str[a] : Var_str[a - 74]));
                 if(IS_DATATYPE(s->type[s->top - 1])) {
@@ -51,8 +35,8 @@ bool reduce(Stack *s, Production *p, int len) {
                     int idx = pop(s);
                     printf("\nPopped: %s", ((idx < 74) ? Types_str[idx] : Var_str[idx - 74]));
                 }
-                printf("\nPushed: %s", Var_str[p[j].alpha - 74]);
-                push(p[j].alpha, s);
+                printf("\nPushed: %s", Var_str[alpha[j] - 74]);
+                push(alpha[j], s);
             }
             return true;
         }
@@ -61,31 +45,56 @@ bool reduce(Stack *s, Production *p, int len) {
     return false;
 }
 
+bool reduce(Stack *s, int len) {
+    int *buf = (int*) malloc(len * sizeof(int));
+    int j, k;
+    bool parsed = false;
+
+    if(len-1 > s->top) {
+        printf("\nlen = %d > s->top", len);
+        return false;
+    }
+
+    for(j = 0; j < len; j++) {
+        buf[len-j-1] = s->type[s->top - j];
+        // printf("Copied in buffer: %d", len);
+    }
+
+    unsigned int hashed_prod = hashIt(buf, len);
+
+    if(len == 1) {parsed = parse(s, 0, ONE_PRODUCTION, hashed_prod, len, alpha1, beta1);}
+    else if(len == 2) {parsed = parse(s, ONE_PRODUCTION, TWO_PRODUCTION, hashed_prod, len, alpha2, beta2);}
+    else if(len == 3) {parsed = parse(s, TWO_PRODUCTION, THREE_PRODUCTION, hashed_prod, len, alpha3, beta3);}
+    else if(len == 4) {parsed = parse(s, THREE_PRODUCTION, FOUR_PRODUCTION, hashed_prod, len, alpha4, beta4);}
+    else if(len == 5) {parsed = parse(s, FOUR_PRODUCTION, FIVE_PRODUCTION, hashed_prod, len, alpha5, beta5);}
+    else if(len == 8) {parsed = parse(s, FIVE_PRODUCTION, EIGHT_PRODUCTION, hashed_prod, len, alpha8, beta8);}
+    else if(len == 9) {parsed = parse(s, EIGHT_PRODUCTION, NINE_PRODUCTION, hashed_prod, len, alpha9, beta9);}
+
+    return parsed;
+}
+
 void shift(int type, Stack *s) {
     push(type, s);
 }
 
-bool syntaxCheck(HashMap *hm) {
+bool syntaxCheck(Type *tokens, int len) {
     Stack *s = newStack();
     int i = 0;
 
-    Production *prod;
-    initProductions(prod);
-
-    push(hm->kt[i++].type, s);
+    push(tokens[i++], s);
     
     while(s->type[s->top] != library) {
-        display(*s);
-        if(reduce(s, prod, 1)) {printf("\ntaken: Reduce-1"); continue;} // Reduce-1 step
-        else if(reduce(s, prod, 2)) {printf("\ntaken: Reduce-2"); continue;} // Reduce-2 step
-        else if(reduce(s, prod, 3)) {printf("\ntaken: Reduce-3"); continue;} // Reduce-3 step
-        else if(reduce(s, prod, 4)) {printf("\ntaken: Reduce-4"); continue;} // Reduce-4 step
-        else if(reduce(s, prod, 5)) {printf("\ntaken: Reduce-5"); continue;} // Reduce-5 step
-        else if(reduce(s, prod, 8)) {printf("\ntaken: Reduce-8"); continue;} // Reduce-8 step
-        else if(reduce(s, prod, 9)) {printf("\ntaken: Reduce-9"); continue;} // Reduce-9 step
-        else {printf("\ntaken: shift"); shift(hm->kt[i++].type, s);} // Shift step
+        displayStack(*s);
+        if(reduce(s, 1)) {printf("\ntaken: Reduce-1"); continue;} // Reduce-1 step
+        else if(reduce(s, 2)) {printf("\ntaken: Reduce-2"); continue;} // Reduce-2 step
+        else if(reduce(s, 3)) {printf("\ntaken: Reduce-3"); continue;} // Reduce-3 step
+        else if(reduce(s, 4)) {printf("\ntaken: Reduce-4"); continue;} // Reduce-4 step
+        else if(reduce(s, 5)) {printf("\ntaken: Reduce-5"); continue;} // Reduce-5 step
+        else if(reduce(s, 8)) {printf("\ntaken: Reduce-8"); continue;} // Reduce-8 step
+        else if(reduce(s, 9)) {printf("\ntaken: Reduce-9"); continue;} // Reduce-9 step
+        else {printf("\ntaken: shift"); shift(tokens[i++], s);} // Shift step
 
-        if(i > hm->len) {
+        if(i > len) {
             return false;
         }
     }

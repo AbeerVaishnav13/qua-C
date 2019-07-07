@@ -1,11 +1,14 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include "Types.h"
+#include "HashMap.h"
+
 #define BRACKET_CONDITION_OPEN(c) (c == '(' || c == '[' || c == '{')
 #define BRACKET_CONDITION_CLOSE(c) (c == ')' || c == ']' || c == '}')
 
 #define PUNCTUATION_CONDITION(c) (c == '=' || c == '<' || c == '>' || c == ',' || \
-                                    c == '-' || c == ':' || c == ';' || c == '|' || c == '~')
+                                    c == '-' || c == ':' || c == ';' || c == '|' || c == '~' || c == '@')
 
 void assignType(HashMap *hm, char buf[]) {
     bool Float = false;
@@ -23,7 +26,6 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "(")) {insertHM(hm, buf, EXPR_PARANTHESIS_OPEN);}
     else if(!strcmp(buf, ")")) {insertHM(hm, buf, EXPR_PARANTHESIS_CLOSE);}
     else if(!strcmp(buf, ",")) {insertHM(hm, buf, COMMA);}
-    else if(!strcmp(buf, "::")) {insertHM(hm, buf, COLON_COLON);}
     else if(!strcmp(buf, "if")) {insertHM(hm, buf, IF);}
     else if(!strcmp(buf, "else")) {insertHM(hm, buf, ELSE);}
     else if(!strcmp(buf, "elif")) {insertHM(hm, buf, ELIF);}
@@ -37,15 +39,28 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "NON_ZERO")) {insertHM(hm, buf, PRINT_FORMAT);}
     else if(!strcmp(buf, "ALL")) {insertHM(hm, buf, PRINT_FORMAT);}
     else if(!strcmp(buf, "print")) {insertHM(hm, buf, PRINT);}
-    else if(!strcmp(buf, "quReg")) {insertHM(hm, buf, QUREG);}
-    else if(!strcmp(buf, "quBit")) {insertHM(hm, buf, QUBIT);}
-    else if(!strcmp(buf, "...")) {insertHM(hm, buf, RANGE);}
+    else if(!strcmp(buf, "Qureg")) {insertHM(hm, buf, QUREG);}
+    else if(!strcmp(buf, "Qubit")) {insertHM(hm, buf, QUBIT);}
+    else if(!strcmp(buf, "class")) {insertHM(hm, buf, CLASS);}
+    else if(!strcmp(buf, "inherits")) {insertHM(hm, buf, INHERITS);}
+    else if(!strcmp(buf, "@")) {insertHM(hm, buf, EXPLICIT_TYPE_ASSIGN);}
+    else if(!strcmp(buf, "private")) {insertHM(hm, buf, ACCESS_SPEC);}
+    else if(!strcmp(buf, "protected")) {insertHM(hm, buf, ACCESS_SPEC);}
+    else if(!strcmp(buf, "public")) {insertHM(hm, buf, ACCESS_SPEC);}
+    else if(!strcmp(buf, "default")) {insertHM(hm, buf, ACCESS_SPEC);}
+    else if(!strcmp(buf, "static")) {insertHM(hm, buf, STATIC);}
+    else if(!strcmp(buf, "true")) {insertHM(hm, buf, BOOL_LITERAL);}
+    else if(!strcmp(buf, "false")) {insertHM(hm, buf, BOOL_LITERAL);}
+    else if(!strcmp(buf, "::")) {insertHM(hm, buf, RANGE);}
     else if(!strcmp(buf, "return")) {insertHM(hm, buf, RETURN);}
     else if(!strcmp(buf, "save")) {insertHM(hm, buf, SAVE);}
+    else if(!strcmp(buf, "var")) {insertHM(hm, buf, VAR);}
+    else if(!strcmp(buf, "val")) {insertHM(hm, buf, VAL);}
     else if(!strcmp(buf, "Int")) {insertHM(hm, buf, INT);}
     else if(!strcmp(buf, "Char")) {insertHM(hm, buf, CHAR);}
     else if(!strcmp(buf, "Bool")) {insertHM(hm, buf, BOOL);}
-    else if(!strcmp(buf, "Void")) {insertHM(hm, buf, VOID);}
+    else if(!strcmp(buf, "Float")) {insertHM(hm, buf, FLOAT);}
+    else if(!strcmp(buf, "String")) {insertHM(hm, buf, STRING);}
     else if(!strcmp(buf, "while")) {insertHM(hm, buf, WHILE);}
     else if(!strcmp(buf, "->")) {insertHM(hm, buf, APPLY_GATES);}
     else if(!strcmp(buf, "++")) {insertHM(hm, buf, INC);}
@@ -57,7 +72,7 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "-")) {insertHM(hm, buf, SUB);}
     else if(!strcmp(buf, "*")) {insertHM(hm, buf, MULT);}
     else if(!strcmp(buf, "/")) {insertHM(hm, buf, DIV);}
-    else if(!strcmp(buf, "<-")) {insertHM(hm, buf, ASSIGN);}
+    else if(!strcmp(buf, "=")) {insertHM(hm, buf, ASSIGN);}
     else if(!strcmp(buf, "==")) {insertHM(hm, buf, EQUALS);}
     else if(!strcmp(buf, "!=")) {insertHM(hm, buf, N_EQUALS);}
     else if(!strcmp(buf, ">")) {insertHM(hm, buf, GT);}
@@ -69,7 +84,7 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "-=")) {insertHM(hm, buf, SUB_ASSIGN);}
     else if(!strcmp(buf, "?")) {insertHM(hm, buf, IF_THEN_ELSE);}
     else if(!strcmp(buf, ":")) {insertHM(hm, buf, IF_THEN_ELSE);}
-    else if(!strcmp(buf, "<=")) {insertHM(hm, buf, TX_TO_FUNC);}
+    else if(!strcmp(buf, "<-")) {insertHM(hm, buf, TX_TO_FUNC);}
     else if(!strcmp(buf, "=>")) {insertHM(hm, buf, RX_FROM_FUNC);}
     else if(!strcmp(buf, "Co")) {insertHM(hm, buf, CNOT_o);}
     else if(!strcmp(buf, "Cx")) {insertHM(hm, buf, CNOT_x);}
@@ -89,6 +104,10 @@ void assignType(HashMap *hm, char buf[]) {
         for(i = 0; buf[i] != '\0'; i++);
         buf[i-1] = '\0';
         insertHM(hm, (buf+1), STRING_LITERAL);
+    }
+    else if(buf[0] == '\'') {
+        buf[2] = '\0';
+        insertHM(hm, (buf+1), CHAR_LITERAL);
     }
     else {insertHM(hm, buf, IDENTIFIER);}
 }
@@ -221,22 +240,34 @@ HashMap* Tokenize(FILE *fp) {
             }
             fseek(fp, -1, SEEK_CUR);
         }
-        else if(c == '"') {
-            if(alpha || digit || punct || bracket_close || bracket_open) {
-                alpha = digit = punct = bracket_close = bracket_open = dot = false;
-                buf[j] = '\0';
+        else if(c == '"' || c == '\'') {
+            if(c == '"') {
+                if(alpha || digit || punct || bracket_close || bracket_open) {
+                    alpha = digit = punct = bracket_close = bracket_open = dot = false;
+                    buf[j] = '\0';
+                    if(buf[0] != '\0') {assignType(hm, buf);}
+                    j = 0;
+                }
+
+                buf[j++] = c;
+                while((c = fgetc(fp)) != '"') {
+                    buf[j++] = c;
+                }
+                buf[j] = c;
+                buf[j+1] = '\0';
                 if(buf[0] != '\0') {assignType(hm, buf);}
                 j = 0;
             }
-
-            buf[j++] = c;
-            while((c = fgetc(fp)) != '"') {
+            else {
                 buf[j++] = c;
+                while ((c = fgetc(fp)) != '\'') {
+                    buf[j++] = c;
+                }
+                buf[j] = c;
+                buf[j+1] = '\0';
+                if(buf[0] != '\0') {assignType(hm, buf);}
+                j = 0;
             }
-            buf[j] = c;
-            buf[j+1] = '\0';
-            if(buf[0] != '\0') {assignType(hm, buf);}
-            j = 0;
         }
 		else if(c == ' ' || c == '\n' || c == '\t') {
             while(c == ' ' || c == '\n' || c == '\t') {

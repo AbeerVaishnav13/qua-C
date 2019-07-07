@@ -42,7 +42,7 @@ int pop(Stack *s) {
     return type;
 }
 
-void display(Stack s) {
+void displayStack(Stack s) {
     int i;
     printf("\n\nStack: ");
     for(i = s.top; i >= 0; i--) {

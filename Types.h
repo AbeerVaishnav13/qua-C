@@ -7,10 +7,12 @@ typedef enum t {
     INT_LITERAL, // integer number
     FLOAT_LITERAL, // float number
     STRING_LITERAL, // "surrounded by double quotes"
+    CHAR_LITERAL, // surrounded by ' '
+    BOOL_LITERAL, // true & false
 
     // TOKENS
     CMPND_STMT_OPEN, CMPND_STMT_CLOSE, // {.}
-    COMMA, /* , */ COLON_COLON, /* "::" */
+    COMMA, /* , */
     ELIF, // elif
     ELSE, // else
     END_OF_LINE, /* ";" */ 
@@ -30,15 +32,16 @@ typedef enum t {
     RANGE, // (2...10)
     RETURN, // return
     SAVE, // save
-    INT, CHAR, BOOL, VOID, FLOAT,// Int, Char, Bool, Void, Float
+    VAR, VAL, INT, CHAR, BOOL, VOID, FLOAT, STRING,// Int, Char, Bool, Void, Float, String
     WHILE, //while
 
     // OPERATORS
     APPLY_GATES, // (->)
     INC, DEC, NEG, BIT_AND, BIT_OR, BIT_EXOR, BIT_INV, // Unary operators
-    ADD, SUB, MULT, DIV, ASSIGN, /* <- */ EQUALS, N_EQUALS, GT, LT, GTET, LTET, AND, OR, ADD_ASSIGN, SUB_ASSIGN, // Binary Operators
-    IF_THEN_ELSE, // Ternary operator
-    TX_TO_FUNC, // (<=)
+    ADD, SUB, MULT, DIV, ASSIGN/* = */, EQUALS, N_EQUALS, GT, LT, GTET, LTET, AND, OR, ADD_ASSIGN, SUB_ASSIGN, // Binary Operators
+    IF_THEN_ELSE, // Ternary Operator
+    EXPLICIT_TYPE_ASSIGN, // Explicit datatype assignment
+    TX_TO_FUNC, // (<-)
     RX_FROM_FUNC, // (=>)
 
     // GATES
@@ -54,18 +57,25 @@ typedef enum t {
     QFT, // Q
     ROTATION, // R_xx.xx
     SWAP, // Sx
+
+    CLASS, // class keyword
+    INHERITS, // inheritance using 'from'
+    ACCESS_SPEC, // For access specifiers
+    STATIC // static keyword
 }Type;
 
-char Types_str[74][23] = {
-    // CLASSES
+char Types_str[83][23] = {
+    // DATA CLASSES
     "IDENTIFIER", // function/variable name
     "INT_LITERAL", // integer number
     "FLOAT_LITERAL", // float number
     "STRING_LITERAL", // "surrounded by double quotes"
+    "CHAR_LITERAL", // surrounded by ' '
+    "BOOL_LITERAL", // true & false
 
     // TOKENS
     "CMPND_STMT_OPEN", "CMPND_STMT_CLOSE", // {.}
-    "COMMA", /* , */ "COLON_COLON", /* "::" */
+    "COMMA", /* , */
     "ELIF", // elif
     "ELSE", // else
     "END_OF_LINE", /* ";" */ 
@@ -85,14 +95,15 @@ char Types_str[74][23] = {
     "RANGE", // (2...10)
     "RETURN", // return
     "SAVE", // save
-    "INT", "CHAR", "BOOL", "VOID", "FLOAT",// Int, Char, Bool, Void, Float
+    "VAR", "VAL", "INT", "CHAR", "BOOL", "VOID", "FLOAT", "STRING",// Int, Char, Bool, Void, Float, String
     "WHILE", //while
 
     // OPERATORS
     "APPLY_GATES", // (->)
     "INC", "DEC", "NEG", "BIT_AND", "BIT_OR", "BIT_EXOR", "BIT_INV", // Unary operators
     "ADD", "SUB", "MULT", "DIV", "ASSIGN", /* <- */ "EQUALS", "N_EQUALS", "GT", "LT", "GTET", "LTET", "AND", "OR", "ADD_ASSIGN", "SUB_ASSIGN", // Binary Operators
-    "IF_THEN_ELSE", // Ternary operator
+    "IF_THEN_ELSE", // Ternary Operator
+    "EXPLICIT_TYPE_ASSIGN", // Explicit datatype assignment
     "TX_TO_FUNC", // (<=)
     "RX_FROM_FUNC", // (=>)
 
@@ -109,6 +120,11 @@ char Types_str[74][23] = {
     "QFT", // Q
     "ROTATION", // R_xx.xx
     "SWAP", // Sx
+
+    "CLASS", // class keyword
+    "INHERITS", // inheritance using 'from'
+    "ACCESS_SPEC", // For access specifiers
+    "STATIC" // static keyword
 };
 
 #endif

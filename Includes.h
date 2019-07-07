@@ -7,13 +7,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "Types.h"
-#include "HashMap.h"
 #include "Lexer.h"
-
-#include "Grammer.h"
-#include "Stack.h"
-#include "SyntaxAnalyser.h"
-#include "AbstractSyntaxTree.h"
+// #include "Grammer.h"
+// #include "SyntaxAnalyser.h"
+// #include "AbstractSyntaxTree.h"
 
 #endif

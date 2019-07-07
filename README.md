@@ -8,9 +8,19 @@ Qua-C has a different ideology from conventional programming languages, which ha
 **The Qua-C Transpiler is developed completely in 'C' language currently.*
 
 ## Specifications
-- Support for conventional datatype variables and floating  point handling.
+- Automatic datatype assignment through minimal keywords.
 
-        Int, Char, Bool, Void, Float;        # Datatypes
+        var, val    # variable and value types
+
+        # Examples
+        val a = 10;
+        var b = 15;
+        var c = "Hello";
+
+
+- Support for specifying conventional datatype explicitly for variables and floating point handling.
+
+        Int, Char, Bool, Void, Float        # Datatypes
 
 - New datatypes for providing quantum computiong simulation support.
 
@@ -58,41 +68,42 @@ Qua-C has a different ideology from conventional programming languages, which ha
 
         # OR #
 
-        qr <- {
+        qr = {
             [0] -> ( H | S | ~ | Co | ~ | R(10.25) | H | X | ~ | Co | ~ | H | X );
 		    [1] -> ( H | S | H | Cx | H |    S     | H | X | H | Cx | H | H | X );
         };
 
+
 ## Example syntax
 
-        # file: example.qc
+        # file: example.quaC
 
-        func::Void Grover_search => (qr::Qureg) {
-            qr <- {
+        func Grover_search => (qr @ Qureg) @ Void {
+            qr = {
                 # Grover search for quregister of 2 qubits
                 [0] -> ( H | ~ | ~ | Co | ~ | ~ | H | X | ~ | Co | ~ | H | X );
                 [1] -> ( H | S | H | Cx | H | S | H | X | H | Cx | H | H | X );
             }
 
-            for (Int i in [2...qr.size]) {
+            for (var i in [2 :: qr.size]) {
                 qr[i] -> ( ~ );
             }
         }
 
-        func::Int main => () {
-            Int n <- input("Enter register size: ");
-            Qureg qr[] <- new Qureg[n];
+        func main => () @ Int {
+            var n = input("Enter register size: ");
+            Qureg qr[] = new Qureg[n];
 
-            print::("Qureg1:")::ALL <= (qr);
+            print("Qureg1:" + qr) @ ALL;
 
-            Grover_search <= (qr); # Calling the function
-            print::("Calling Grover_Search()\n\n");
+            Grover_search <- qr;    # Calling the function
+            print("Calling Grover_Search()\n\n");
 
-            print::("Qureg1: ")::NON_ZERO <= (qr);
+            print("Qureg1: " + qr) @ NONZERO;
         }
 
 ## OUTPUT
-        $ quacc example.qc
+        $ qcc example.quaC
             Enter register size: 3
 
             Qureg1: [0] => {1.000000 + i0.000000} |000>   100.00 %
@@ -108,4 +119,4 @@ Qua-C has a different ideology from conventional programming languages, which ha
 
             Qureg1: [1] => {-1.000000 + i0.000000} |001>   100.00%
 
-** **NOTE: Qua-C is still under developement...**
+** **NOTE: Qua-C is still under developement stage...**
