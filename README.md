@@ -1,122 +1,131 @@
-# Qua-C 
+# Qua-C
+
 Qua-C ( pronounced as /'kwɑ-si/) is a *domain specific programming language* for simulating **Quantum Computing Algorithms.**
 
 Qua-C is a language under development to make the process of coding a Quantum Algorithm easy and in a visual syntax format.
 
 Qua-C has a different ideology from conventional programming languages, which have a sequential syntax format to apply functions and gates to data. Instead of a sequential construct, Qua-C executes code pseudo-parallel fashion for the set of qubits in the quregister.
 
-**The Qua-C Transpiler is developed completely in 'C' language currently.*
+**The Qua-C Transpiler is developed completely in 'C' language currently.**
 
-## Specifications
-- Automatic datatype assignment through minimal keywords.
+Also see the 'Examples' folder to know more about the functionality. The 'Examples' folder contains various examples like:-
 
-        var, val    # variable and value types
-
-        # Examples
-        val a = 10;
-        var b = 15;
-        var c = "Hello";
-
-
-- Support for specifying conventional datatype explicitly for variables and floating point handling.
-
-        Int, Char, Bool, Void, Float        # Datatypes
-
-- New datatypes for providing quantum computiong simulation support.
-
-        Qubit
-
-- Support for multiple qubit calculations using quregisters.
-
-        Qureg qr[] <- new Qureg[10];
-        # qr[0] : Qubit_0
-        # qr[1] : Qubit_1
-        # qr[2] : Qubit_2
-        # qr[3] : Qubit_3
-        # qr[4] : Qubit_4
-        # qr[5] : Qubit_5
-        # qr[6] : Qubit_6
-        # qr[7] : Qubit_7
-        # qr[8] : Qubit_8
-        # qr[9] : Qubit_9
-
-- Implementation of short-hand Quantum Gates
-
-    - Hadamard Gate: **H**
-    - Phase Gate: **S**
-    - Rotation Gate: **R(x)**
-    
-            x: Angle value (in degrees)(Int/Float)
-    - CNOT Gate:
-        - Control gate: **Co**
-        - NOT gate: **Cx**
-    - NOOP Gate: **~**
-    - Pauli Gates
-        - Pauli X gate: **X**
-        - Pauli Y gate: **Y**
-        - Pauli Z gate: **Z**
-    - Swap Gate: **Sx**
-    - Quantum Fourier Transform (QFT) Gate: **Q**
-    - Inverse QFT Gate: **Qi**
-
-- Easy to understand syntax, oriented towards ease of visualisation of operations on qubits using quantum gates.
-
-        Qureg qr[] = new Qureg[2];
-
-        qr[0] -> ( H | S | ~ | Co | ~ | R(10.25) | H | X | ~ | Co | ~ | H | X );
-		qr[1] -> ( H | S | H | Cx | H |    S     | H | X | H | Cx | H | H | X );
-
-        # OR #
-
-        qr = {
-            [0] -> ( H | S | ~ | Co | ~ | R(10.25) | H | X | ~ | Co | ~ | H | X );
-		    [1] -> ( H | S | H | Cx | H |    S     | H | X | H | Cx | H | H | X );
-        };
+1. CNOT Gate
+2. Hadamard Gate
+3. Rotation of qubits about X, Y, Z - Axes of Bloch Sphere
+4. Quantum NOT Gate
+5. Quantum Registers
+6. Quantum Rotation about imaginary axis
+7. Quantum swapping of two Qubits
 
 
-## Example syntax
+## Quantum Registers
 
-        # file: example.quaC
+This feature allows the use to make registers consisting of multiple qubits at a time.
 
-        func Grover_search => (qr @ Qureg) @ Void {
-            qr = {
-                # Grover search for quregister of 2 qubits
-                [0] -> ( H | ~ | ~ | Co | ~ | ~ | H | X | ~ | Co | ~ | H | X );
-                [1] -> ( H | S | H | Cx | H | S | H | X | H | Cx | H | H | X );
-            }
+To make the coding of these gates easier, a functionality of short-hand gates is provided. The gates can be applied to the register as follows:-
 
-            for (var i in [2 :: qr.size]) {
-                qr[i] -> ( ~ );
-            }
-        }
+	*** example.qc ***
 
-        func main => () @ Int {
-            var n = input("Enter register size: ");
-            Qureg qr[] = new Qureg[n];
+	func test {
+		Pa()
+		[X, X]
+		[Z, Y]
+		[H, H]
+		[X, Z]
+		[Y, X]
+	}
 
-            print("Qureg1:" + qr) @ ALL;
+	quReg a = init(2)
+	a.name = "quReg1: "
+	a.prec = 6
 
-            Grover_search <- qr;    # Calling the function
-            print("Calling Grover_Search()\n\n");
+	a.test()
+	a.Pnz()
 
-            print("Qureg1: " + qr) @ NONZERO;
-        }
 
-## OUTPUT
-        $ qcc example.quaC
-            Enter register size: 3
+OUTPUT:
 
-            Qureg1: [0] => {1.000000 + i0.000000} |000>   100.00 %
-                    [1] => {0.000000 + i0.000000} |001>   0.00 %
-                    [2] => {0.000000 + i0.000000} |010>   0.00 %
-                    [3] => {0.000000 + i0.000000} |011>   0.00 %
-                    [4] => {1.000000 + i0.000000} |100>   0.00 %
-                    [5] => {0.000000 + i0.000000} |101>   0.00 %
-                    [6] => {0.000000 + i0.000000} |110>   0.00 %
-                    [7] => {0.000000 + i0.000000} |111>   0.00 %
+	./quacc example.qc
 
-            Calling Grover_Search()
+	quReg2 = 
+	[0]:	{1.000000 + 0.000000 i} |00>	100.00 %
+	[1]:	{0.000000 + 0.000000 i} |01>	0.00 %
+	[2]:	{0.000000 + 0.000000 i} |10>	0.00 %
+	[3]:	{0.000000 + 0.000000 i} |11>	0.00 %
 
-            Qureg1: [1] => {-1.000000 + i0.000000} |001>   100.00%
+	quReg2 = 
+	[0]:	{-0.000000 - 0.500000 i} |00>	25.00 %
+	[1]:	{-0.000000 + 0.500000 i} |01>	25.00 %
+	[2]:	{-0.000000 - 0.500000 i} |10>	25.00 %
+	[3]:	{-0.000000 + 0.500000 i} |11>	25.00 %
 
-** **NOTE: Qua-C is still under developement stage...**
+
+The above code segment has the following meaning:-
+ - Initialize a new quRegister.
+ - Display text for the quRegister is "quReg1: ".
+ - Pa() -> Print all possible combinations of 'n' qubits in the quRegister.
+ - Pauli gate 'X' is applied to [qubit[0], qubit[1]] respectively.
+ - Pauli gate 'Z' is applied to qubit[0] and 'Y' to qubit[1] respectively, and so on.
+ - Pnz() -> Print only non-zero magnitude values.
+
+## List of short-hand gates
+- Hadamard Gate: **H**
+- Phase Gate: **S**
+- Rotation Gate: **R(x)**
+
+        x: Angle value (in degrees)(Int/Float)
+- CNOT Gate:
+    - Control gate: **Co**
+    - NOT gate: **Cx**
+- NOOP Gate: **-**
+- Pauli Gates
+    - Pauli X gate: **X**
+    - Pauli Y gate: **Y**
+    - Pauli Z gate: **Z**
+- Swap Gate: **Sx**
+- Quantum Fourier Transform (QFT) Gate: **Q**
+- Inverse QFT Gate: **Qi**
+
+ *For more info, see the examples: https://github.com/AbeerVaishnav13/qua-C/tree/master/Examples*
+
+*\*Currently, the language supports registers upto 28-qubits with 8GB of memory.*
+
+## Installation Instructions
+
+### Dependncies
+The dependencies for QuaC language is the **gcc** compiler and **cmake**. 
+
+(i) For Ubuntu/Linux platform
+
+	sudo apt-get install gcc cmake
+
+(ii) For MacOS platform - With HomeBrew installed
+
+	sudo brew install gcc cmake
+
+(iii) For Windows platform - install MINGW GCC for windows or even better, install any Linux 			  		distribution of your choice :)
+
+
+### Install the compiler
+Go to the installations directory:-
+
+	cd /path/to/download/location/qua-C
+
+Run the following command after installing all the dependencies
+
+	make
+
+Run the basic example file
+
+	./quacc ./Examples/basic.qc
+
+
+
+More stuff on the way... Enjoy! :)
+
+Regards
+
+Abeer Vaishnav
+
+
