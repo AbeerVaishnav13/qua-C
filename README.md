@@ -110,7 +110,7 @@ The dependencies for QuaC language is the **gcc** compiler and **cmake**.
 ### Install the compiler
 Go to the installations directory:-
 
-	cd /path/to/download/location/qua-C
+	cd /path/to/download/location/qua-C-master
 
 Run the following command after installing all the dependencies
 
