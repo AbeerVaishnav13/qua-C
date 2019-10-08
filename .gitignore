@@ -51,6 +51,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-*.qc
 .vscode
-Examples
+quacc
