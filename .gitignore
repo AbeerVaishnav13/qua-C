@@ -53,3 +53,5 @@ dkms.conf
 
 .vscode
 quacc
+Aux files
+TestInput.qc

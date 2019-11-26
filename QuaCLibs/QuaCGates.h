@@ -75,10 +75,6 @@ quReg* QFT_reg(quReg *qr, int *idxs);
 // Inverse Quantum Fourier Transform Gate
 quReg* Inv_QFT_reg(quReg *qr, int *idxs);
 
-
-// Short-hand for applying gates to registers
-quReg* applyGates_reg(const char* gate_string, quReg *qr);
-
 // Function Definitions
 //
 //

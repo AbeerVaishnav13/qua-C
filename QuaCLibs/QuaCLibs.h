@@ -36,7 +36,11 @@ void setPrecision(int prec);
 
 #include "QuaCMemAlloc.h"
 #include "QuaCGates.h"
+#include "HashMap.h"
+#include "Types.h"
+#include "QuaCLexer.h"
 #include "QuaCParser.h"
+#include "QuaCExecutor.h"
 
 // Custom round function so as to take care of significant digits after decimal place.
 double __round(double num) {

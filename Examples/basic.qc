@@ -6,9 +6,8 @@ func basic {
 	[H, H]
 }
 
-quReg a = init [2]
-a.name = "quReg1: "
-a.prec = 6
+quReg a = new quReg[2] => 'quReg1'
+a.setPrecision(6)
 
 a.Pa()
 a.basic()

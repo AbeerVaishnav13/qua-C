@@ -1,292 +1,472 @@
 #ifndef QUANTUM_PARSER_H
 #define QUANTUM_PARSER_H
 
-typedef struct hm {
-	char *token;
-	FILE f;
-	struct hm *next;
-}FuncHashMap;
+#define GATE_COND_PARSE(c) (c == PAULI_X || c == PAULI_Y || c == PAULI_Z || c == HADAMARD || \
+                      c == ROTATION || c == SWAP || c == QFT || c == CONTROL || c == INV_CONTROL || \
+                      c == POWER || c == X_AXIS_CONTROL || c == Y_AXIS_CONTROL || c == IDENTITY || \
+                      c == PHASE || c == IDENTIFIER)
 
-FuncHashMap* addToken(FuncHashMap *hm, char *t, FILE *fptr) {
-	FuncHashMap *h = (FuncHashMap*) malloc(sizeof(FuncHashMap));
-	h->token = (char*) malloc(strlen(t) * sizeof(char));
+/*
+////////////////////////////////////////
+SAMPLE PROGRAM
+////////////////////////////////////////
 
-
-
-	strcpy(h->token, t);
-	h->f = *fptr;
-	h->next = hm;
-
-	return h;
+gate Uw[6] {
+    [-, -, -, X, -, -]
+    [X, @, @, @, @, @]
+    [-, -, -, X, -, -]
 }
 
-void printHM(FuncHashMap *hm) {
-	printf("FuncName\tLineNum\n");
-	while(hm) {
-		printf("%s\n", hm->token);
-		hm = hm->next;
-	}
+gate Us[6] {
+    [-, H, H, H, H, H]
+    [-, X, X, X, X, X]
+    [X, @, @, @, @, @]
+    [-, X, X, X, X, X]
+    [-, H, H, H, H, H]
 }
 
-void apply_Program(FILE *fp) {
-	char ch, name[25], cur_token[20], prev_token[20];
-	int line_count = 0, i = 0;
-	FuncHashMap *funcs = NULL;
-	FILE ret_line_ptr, cur_func_line_ptr;
-	quReg *qr;
-	bool qureg_init = false, got_name = false, got_prec = false, building_token = true, function_active = false;
-	bool start_col = false;
-	int gate_num = 0;
-	int count = 0;
+func grover {
+    [X, -, -, -, -, -]
+    [H, H, H, H, H, H]
+    [Uw]
+    [Us]
+    [Uw]
+    [Us]
+    [Uw]
+    [Us]
+    [Uw]
+    [Us]
+    Pa()
+}
 
-	while((ch = fgetc(fp)) != EOF) {
-		if(ch == '#') {
-			building_token = false;
-			while(fgetc(fp) != '\n');
-			line_count++;
-		}
-		else if(isalnum(ch) || ch == '_') {
-			cur_token[i++] = ch;
-			building_token = true;
-		}
-		else if(ch == '"') {
-			while((ch = fgetc(fp)) != '"') {
-				cur_token[i++] = ch;
-			}
-		}
-		else if(ch == ' ' || ch == '\n' || ch == '{' || ch == '.' || ch == ',') {
-			cur_token[i] = '\0';
-			building_token = false;
-			i = 0;
+quReg qr = new quReg[6] => 'qr1'
+qr.setPrecision(6)
 
-			if(!strcmp(prev_token, "func")) {
-				int n = 0;
-				while(fgetc(fp) != '\n') {
-					n++;
-				}
-				n += 2;
-				fseek(fp, 1, SEEK_CUR);
-				funcs = addToken(funcs, cur_token, fp);
-				fseek(fp, -n, SEEK_CUR);
-			}
+qr.Pnz()
+qr.grover()
+qr.Pnz()
 
-			strcpy(prev_token, cur_token);
+////////////////////////////////////////
+CONTEXT FREE GRAMMER !!! (CFG)
+////////////////////////////////////////
 
-			if(ch == '{') {
-				while((ch = fgetc(fp)) != '}') {
-					if(ch == '\n') {
-						line_count++;
-					}
-				}
-			}
-		}
+P -> F N D P | G N QA D P | I                               DONE
+F -> func                                                   DONE
+G -> gate                                                   DONE
+QA -> [ num ]                                               DONE
+N -> alnum                                                  DONE
+D -> { C }                                                  DONE
+C -> [ Gate ] C | PRINT_COND C | e                          DONE
+Gate -> GATE_COND , Gate| GATE_COND                         DONE
 
-		// Init the quReg
-		if(!strcmp(cur_token, "init") && !qureg_init) {
-			fseek(fp, 1, SEEK_CUR);
-			int size = fgetc(fp) - '0';
-			if((ch = fgetc(fp)) != ']')
-				size = (size * 10) + (ch - '0');
-			qr = newQuReg(size);
+I -> Q N E Exp NL                                           DONE
+Exp -> New Q Size Name | alnum | String                     DONE
+Q -> quReg                                                  DONE
+New -> new                                                  DONE
+E -> =                                                      DONE
+Size -> [ alnum ]                                           DONE
+Name -> => String | e                                       DONE
+String -> ' chars ' | " chars " | ' ' | " "                 DONE
 
-			qureg_init = true;
-		}
-		// Getting name of quReg
-		else if(!strcmp(cur_token, "name") && !got_name) {
-			int j = 0;
-			while(fgetc(fp) != '"');
+NL -> N Dot Param NL | I | e                                DONE
+Dot -> .                                                    DONE
+Param -> N Paranthesis | PRINT_COND                         DONE
+Paranthesis -> ( ) | ( alnum ) | e                          DONE
 
-			while((ch = fgetc(fp)) != '"') {
-				name[j++] = ch;
-			}
-			name[j] = '\0';
-			got_name = true;
-		}
-		// Getting precision
-		else if(!strcmp(cur_token, "prec") && !got_prec) {
-			while(!isdigit(ch = fgetc(fp)));
 
-			int prec = ch - '0';
-			if((ch = fgetc(fp)) != '\n')
-				prec = (prec * 10) + (ch - '0');
-			fseek(fp, -1, SEEK_CUR);
+////////////////////////////////////////
+CONTEXT FREE GRAMMER !!! (CFG) (with Types.h)
+////////////////////////////////////////
 
-			setPrecision(prec);
-			got_prec = true;
-		}
-		else if(!strcmp(cur_token, "Pnz")) {
-			printf("%s", name);
-			Qprint("%r\n", qr);
-		}
-		else if(!strcmp(cur_token, "Pa")) {
-			printf("%s", name);
-			Qprint("%a\n", qr);
-		}
+P -> F N D P | G N QA D P | I
+F -> FUNC
+G -> GATE
+QA -> IDX_BRACKET_OPEN (IDENTIFIER or INT_LITERAL) IDX_BRACKET_CLOSE
+N -> IDENTIFIER
+D -> CMPND_STMT_OPEN C CMPND_STMT_CLOSE
+C -> IDX_BRACKET_OPEN G IDX_BRACKET_CLOSE C | PRINT_COND C | e
+Gate -> GATE_COND COMMA Gate| GATE_COND
 
-		else if(qureg_init && got_name && got_prec) {
-			FuncHashMap *head = funcs;
-			while(head != NULL) {
-				// printf("test: %s\t%s\n", head->token, cur_token);
-				if(!strcmp(head->token, cur_token)) {
-					// printf("test2\n");
-					ret_line_ptr = *fp;
-					*fp = head->f;
-					function_active = true;
-					break;
-				}
-				head = head->next;
-			}
+I -> Q N E Exp NL
+Exp -> New Q Size Name | IDENTIFIER | STRING_LITERAL
+Q -> QUREG
+New -> NEW
+E -> EQUALS
+Size -> IDX_BRACKET_OPEN (IDENTIFIER or INT_LITERAL) IDX_BRACKET_CLOSE
+Name -> REG_NAME STRING_LITERAL | e
 
-			// THE MAIN PART !!!!!!
-			if(function_active) {
-				while((ch = fgetc(fp)) != '}') {
-					char next_ch;
+NL -> N Dot Param NL | I | e
+Dot -> DOT
+Param -> N Paranthesis | PRINT_COND
+Paranthesis -> EXPR_PARANTHESIS_OPEN EXPR_PARANTHESIS_CLOSE | EXPR_PARANTHESIS_OPEN (IDENTIFIER or INT_LITERAL) EXPR_PARANTHESIS_CLOSE | e
+*/
+ 
+int error, i = 0;
+Type *input;
 
-					if(start_col == false && ch == '[')
-						start_col = true;
-					else if(ch == ']') {
-						start_col = false;
-						gate_num = 0;
-					}
+bool Parse(); // Program
+void F(); // func
+void G(); // gate
+void QA(); // qubit array
+void N(); // Name
+void D(); // Description
+void C(); // Columns
+void Gate(); // Gates
 
-					if(ch == '#') {
-						while((ch = fgetc(fp)) != '\n');
-					}
+void I(); // Init_simulation
+void Exp(); // Expression
+void Q(); // quReg
+void New(); // new
+void E(); // Equal-to
+void Size(); // qureg size
+void Name(); // qureg name
+void String(); // parse any string
 
-					if(ch == 'P') {
-						if((ch = fgetc(fp)) == 'a') {
-							printf("%s", name);
-							Qprint("%a\n", qr);
-						}
-						else if(ch == 'n' && (next_ch = fgetc(fp)) == 'z') {
-							printf("%s", name);
-							Qprint("%r\n", qr);
-						}
-					}
+void NL(); // next line
+void Dot(); // a dot
+void Param(); // specifying a param for qr
+void Paranthesis(); // For giving paranthesis
 
-					if(start_col) {
-						if(ch == ',' || ch == ' ') {
-						}
-						else if(ch == 'X') {
-							qr = X_reg(qr, gate_num);
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == 'Y') {
-							qr = Y_reg(qr, gate_num);
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == 'Z') {
-							qr = Z_reg(qr, gate_num);
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == 'H') {
-							qr = H_reg(qr, gate_num);
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == 'S') {
-							if((ch = fgetc(fp)) == 'x') {
-								int idx1, idx2 = -1;
-								idx1 = gate_num;
+// P -> F N D P | G N QA D P | I
+bool Parse() { // Program
+    if(input[i] == LIST_END)
+        return true;
 
-								while(ch != 'S' && (next_ch = fgetc(fp)) != 'x') {
-									if(ch == ']') {
-										printf("[!] Invalid expression... There should be 2 swap gates together.\n");
-										printf("Exiting...\n");
-										exit(0);
-									}
-									else if (ch == ',')
-										gate_num = (gate_num+1) % qr->size;
-								}
+    if(input[i] == FUNC) {
+        F();
+        N();
+        D();
+        Parse();
+    }
+    else if(input[i] == GATE) {
+        G();
+        N();
+        QA();
+        D();
+        Parse();
+    }
+    else if(input[i] == QUREG) {
+        I();
+    }
+    else {
+        error = -1;
+        printf("[!] Incorrect syntax. [%d]\n", error);
+    }
 
-								idx2 = gate_num;
-								QSwap_reg(qr, idx1, idx2);
-							}
-							else {
-								qr = S_reg(qr, gate_num);
-								fseek(fp, -1, SEEK_CUR);
-							}
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == 'R') {
-							fseek(fp, 2, SEEK_CUR);
-							int count = 0;
-							double angle;
-							int decimal = 0;
-							bool negative = false;
-							for(int j = 0; ; j++, i++) {
-								if((ch = fgetc(fp)) == '-')
-									negative = true;
+    return (error == 0 ? true : false);
+}
 
-								if(isalnum(ch)) {
-									if(!decimal) {
-										angle = angle * 10 + (ch - '0');
-									}
-									else if(decimal) {
-										count++;
-										double summand = (double) (ch - '0') / pow(10, count);
-										angle = angle + summand;
-									}
-								}
-								else if(ch == '.') {
-									decimal = 1;
-								}
+// F -> func
+void F() { // func
+    if(input[i] == FUNC) {
+        i++;
+    }
+    else {
+        error = -2;
+        printf("[!] Encountered something else instead of 'func'. [%d]\n", error);
+    }
+}
 
-								if(ch == '(' || ch == ',')
-									break;
-							}
-							fseek(fp, -1, SEEK_CUR);
-							angle = angle * PI / 180;
-							angle = negative ? -1 * angle : angle;
-							qr = R_reg(angle, qr, gate_num);
-							gate_num = (gate_num+1) % qr->size;
-							angle = 0;
-						}
-						else if(ch == 'C') {
-							int *idxs = (int*) malloc(qr->size * sizeof(int));
-							bool cnot = false;
+// G -> gate
+void G() { // gate
+    if(input[i] == GATE) {
+        i++;
+    }
+    else {
+        error = -3;
+        printf("[!] Encountered something else instead of 'gate'. [%d]\n", error);
+    }
+}
 
-							for(int j = 0; j < qr->size; j++)
-								idxs[j] = 0;
+// QA -> [num]
+void QA() {
+    if(input[i] == IDX_BRACKET_OPEN) {
+        i++;
+        if(input[i] == INT_LITERAL) {
+            i++;
+            if(input[i] == IDX_BRACKET_CLOSE)
+                i++;
+            else {
+                error = -4;
+                printf("[!] Closing bracket ']' missing. [%d]\n", error);
+            }
+        }
+        else {
+            error = -5;
+            printf("[!] A numerical value expected within square brackets. [%d]\n", error);
+        }
+    }
+    else {
+        error = -6;
+        printf("[!] A parameter should be specified after gate identifier within [.] to specify the number of qubits to which the gate has to be applied. [%d]\n", error);
+    }
+}
 
-							if((ch = fgetc(fp)) == 'o') {
-								idxs[gate_num] = -1;
-								cnot = true;
-							}
-							else if(ch == 'x') {
-								idxs[gate_num] = 1;
-								cnot = true;
-							}
+// N -> alnum
+void N() { // Name
+    if(input[i] == IDENTIFIER)
+        i++;
+    else {
+        error = -7;
+        printf("[!] Found: '%c' instead of alnum data. [%d]\n", input[i], error);
+    }
+}
 
-							if(cnot) {
-								while((ch = fgetc(fp)) != ']') {
-									if(ch == 'C' && (next_ch = fgetc(fp)) == 'o')
-										idxs[gate_num] = -1;
-									else if(ch == 'C' && next_ch == 'x')
-										idxs[gate_num] = 1;
+// D -> {C}
+void D() { // Description
+    if(input[i] == CMPND_STMT_OPEN) {
+        i++;
+        C();
+        if(input[i] == CMPND_STMT_CLOSE)
+            i++;
+        else {
+            error = -8;
+            printf("[!] Closing bracket '}' missing. [%d]\n", error);
+        }
+    }
+    else {
+        error = -9;
+        printf("[!] Opening bracket '{' missing. [%d]\n", error);
+    }
+}
 
-									if(ch == ',')
-										gate_num = (gate_num+1) % qr->size;
-								}
-							}
+// C -> [G]C | Pa()C | Pnz()C | e
+void C() { // Columns
+    if(input[i] == IDX_BRACKET_OPEN) {
+        i++;
+        Gate();
+        if(input[i] == IDX_BRACKET_CLOSE) {
+            i++;
+            C();
+        }
+        else {
+            error = -10;
+            printf("[!] Closing bracket ']' missing. [%d]\n", error);
+        }
+    }
+    else if(input[i] == PRINT) {
+        i++;
+        if(input[i] == EXPR_PARANTHESIS_OPEN && input[i+1] == EXPR_PARANTHESIS_CLOSE)
+            i += 2;
+        else {
+            error = -11;
+            printf("[!] Expected '()' after print statement. [%d]\n", error);
+        }
+        C();
+    }
+    else {
+        if(input[i] == CMPND_STMT_CLOSE)
+            return;
+        else {
+            error = -12;
+            printf("[!] Opening bracket '[' missing. [%d]\n", error);
+        }
+    }
+}
 
-							CNOT_reg(qr, idxs);
-							gate_num = (gate_num+1) % qr->size;
-						}
-						else if(ch == '-') {
-							gate_num = (gate_num+1) % qr->size;
-						}
-					}
-				}
-				cur_token[0] = '\0';
-				*fp = ret_line_ptr;
-				function_active = false;
-			}
-		}
+// Gate -> alnum , Gate| alnum
+void Gate() { // Gates
+    if(GATE_COND_PARSE(input[i])) {
+        bool found_other_gate = false;
 
-		if(ch == '\n') {
-			line_count++;
-		}
-	}
+        if(input[i] == SWAP) {
+            i++;
+            while(input[i] != SWAP) {
+                if(!(input[i] == COMMA || input[i] == IDENTITY)) {
+                    found_other_gate = true;
+                }
+                i++;
+                if(input[i] == IDX_BRACKET_CLOSE)
+                    break;
+            }
+            if(found_other_gate) {
+                error = -27;
+                printf("[!] Cannot use any ther gate except IDENTITY gate between two SWAP gates. [%d]\n", error);
+            }
+            if(input[i] == IDX_BRACKET_CLOSE) {
+                error = -28;
+                printf("[!] SWAP gates should be used in pair. Cannot find two SWAP gates in the same row. [%d]\n", error);
+                i--;
+            }
+            else
+                i++;
+        }
+        else
+            i++;
+
+        if(input[i] == COMMA) {
+            i++;
+            Gate();
+        }
+        else
+            return;
+    }
+    else {
+        error = -13;
+        printf("[!] Invalid gate at '%c'. [%d]\n", input[i], error);
+    }
+}
+
+// I -> Q N E Exp NL
+void I() { // Init_simulation
+    Q();
+    N();
+    E();
+    Exp();
+    NL();
+}
+
+// Exp -> New Q Size Name | alnum | String
+void Exp() { // Expression
+    if(input[i] == NEW) {
+        New();
+        Q();
+        Size();
+        Name();
+    }
+    else if(input[i] == IDENTIFIER) {
+        i++;
+    }
+    else if(input[i] == STRING_LITERAL)
+        i++;
+    else {
+        error = -14;
+        printf("[!] Invalid expression. Please check the syntax. [%d]\n", error);
+    }
+}
+
+// Q -> quReg
+void Q() { // quReg
+    if(input[i] == QUREG)
+        i++;
+    else {
+        error = -15;
+        printf("[!] Invalid datatype. [%d]\n", error);
+    }
+}
+
+// New -> new
+void New() { // new
+    if(input[i] == NEW)
+        i++;
+    else {
+        error = -16;
+        printf("[!] Encountered something else instead of 'new'. [%d]\n", error);
+    }
+}
+
+// E -> =
+void E() { // Equal-to
+    if(input[i] == EQUALS)
+        i++;
+    else {
+        error = -17;
+        printf("[!] Encountered something else instead of '='. [%d]\n", error);
+    }
+}
+
+// Size -> [alnum]
+void Size() { // qureg size
+    if(input[i] == IDX_BRACKET_OPEN) {
+        i++;
+        if(input[i] == IDENTIFIER || input[i] == INT_LITERAL) {
+            i++;
+            if(input[i] == IDX_BRACKET_CLOSE)
+                i++;
+            else {
+                error = -18;
+                printf("[!] Closing bracket ']' missing. [%d]\n", error);
+            }
+        }
+        else {
+            error = -19;
+            printf("[!] Expected an integer or variable identifier. [%d]\n", error);
+        }
+    }
+    else {
+        error = -20;
+        printf("[!] Opening bracket '[' missing. [%d]\n", error);
+    }
+}
+
+// Name -> => String | e
+void Name() { // qureg name
+    if(input[i] == REG_NAME) {
+        i++;
+        if(input[i] == STRING_LITERAL)
+            i++;
+        else {
+            error = -21;
+            printf("[!] Expected a name for the quRegister within '' or \"\". [%d]\n", error);
+        }
+    }
+}
+
+// NL -> N Dot Param NL | I | e
+void NL() { // next line
+    if(input[i] == LIST_END)
+        return;
+
+    if(input[i] == QUREG) {
+        I();
+    }
+    else if(input[i] == IDENTIFIER) {
+        N();
+        Dot();
+        Param();
+        NL();
+    }
+    else {
+        error = -22;
+        printf("[!] Incorrect syntax. Expected a datatype or variable identifier. [%d]\n", error);
+    }
+}
+
+// Dot -> .
+void Dot() { // a dot
+    if(input[i] == DOT && input[i-1] == IDENTIFIER)
+        i++;
+    else {
+        error = -23;
+        printf("[!] Expected an identifier before dot operator. [%d]\n", error);
+    }
+}
+
+// Param -> N Paranthesis | Pa() | Pnz()
+void Param() { // specifying a param for qr
+    if(input[i] == PRINT) {
+        i++;
+        if(input[i] == EXPR_PARANTHESIS_OPEN && input[i+1] == EXPR_PARANTHESIS_CLOSE)
+            i += 2;
+        else {
+            error = -24;
+            printf("[!] Expected '()' after print statement. [%d]\n", error);
+        }
+    }
+    else if(input[i] == IDENTIFIER) {
+        N();
+        Paranthesis();
+    }
+    else {
+        error = -25;
+        printf("[!] Incorrect syntax. Expected a variable/function identifier. [%d]\n", error);
+    }
+}
+
+// Paranthesis -> () | (alnum) | e
+void Paranthesis() { // For giving paranthesis
+    if(input[i] == EXPR_PARANTHESIS_OPEN) {
+        i++;
+        if(input[i] == IDENTIFIER || input[i] == INT_LITERAL || input[i] == FLOAT_LITERAL)
+            i++;
+
+        if(input[i] == EXPR_PARANTHESIS_CLOSE)
+            i++;
+        else {
+            error = -26;
+            printf("[!] Closing bracket ')' missing. [%d]\n", error);
+        }  
+    }
 }
 
 #endif
