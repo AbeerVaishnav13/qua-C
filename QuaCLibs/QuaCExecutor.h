@@ -233,15 +233,17 @@ void executePrint(char *cmd, quReg *qr, QuregMap *qm) {
 void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size, quReg *qr, QuregMap *qm) {
 	int cur_gate_num = 0;
 	int ret_i_val_func = 0;
+	char *func_name = (char*) malloc(strlen(keytypes[i].key) * sizeof(char));
+	strcpy(func_name, keytypes[i].key);
 
-	IdentifierMap *im;
+	IdentifierMap *imap;
 
 	while(keytypes[i].type != IDX_BRACKET_OPEN) i++;
 
 	while(keytypes[i].type != CMPND_STMT_CLOSE) {
 
 		if(cur_gate_num > qureg_size) {
-			printf("[!] Too many gates in the row. [%d]\n", cur_gate_num);
+			printf("[!] Too many gates in the function '%s'. [number of gates: %d]\n", func_name, cur_gate_num);
 			exit(-1);
 		}
 
@@ -276,24 +278,32 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 			qr = QSwap_reg(qr, cur_gate_num, idx2);
 		}
 		else if(keytypes[i].type == QFT) {
-
+			printf("QFT Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
 		}
 		else if(keytypes[i].type == CONTROL) {
+			printf("CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
 		}
 		else if(keytypes[i].type == INV_CONTROL) {
+			printf("INVERSE-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
 		}
 		else if(keytypes[i].type == X_AXIS_CONTROL) {
-
+			printf("X-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
 		}
 		else if(keytypes[i].type == Y_AXIS_CONTROL) {
-
+			printf("Y-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
 		}
 		else if(keytypes[i].type == IDENTITY) {
+
 		}
-		else if((im = getIdentifier(keytypes[i].key, gates))) {
+		else if((imap = getIdentifier(keytypes[i].key, gates))) {
 			ret_i_val_func = i + 1;
-			i = im->idx;
-			executeGate(keytypes, im->idx, qr, cur_gate_num);
+			i = imap->idx;
+			executeGate(keytypes, i, qr, cur_gate_num);
 			i = ret_i_val_func;
 		}
 		else if(keytypes[i].type == PRINT) {
@@ -313,7 +323,96 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 }
 
 void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done) {
-	
+	int gate_size = atoi(keytypes[i+2].key);
+	int cur_qubit_idx = 0;
+	int cur_gate_num = 0;
+	char *gate_name = (char*) malloc(strlen(keytypes[i].key) * sizeof(char));
+	strcpy(gate_name, keytypes[i].key);
+
+	if((gate_size + gates_done) > qr->size) {
+		printf("[!] Too many gates in the row. Resize the custom gate '%s' or decrease the number of pre-defined gates in the row. [%d]\n", keytypes[i].key, (gates_done + gate_size));
+		exit(-1);
+	}
+
+	i += 2;
+
+	while(keytypes[i].type != IDX_BRACKET_OPEN) i++;
+
+	while(keytypes[i].type != CMPND_STMT_CLOSE) {
+		if(cur_qubit_idx > gate_size) {
+			printf("[!] Too many gates in the custom gate '%s'. [number of gates: %d]\n", gate_name, cur_qubit_idx);
+			exit(-1);
+		}
+
+		cur_gate_num = gates_done + cur_qubit_idx;
+
+		if(keytypes[i].type == COMMA) {
+		}
+		else if(keytypes[i].type == IDX_BRACKET_CLOSE || keytypes[i].type == IDX_BRACKET_OPEN || keytypes[i].type == CMPND_STMT_CLOSE) {
+			cur_qubit_idx = 0;
+		}
+		else if(keytypes[i].type == PAULI_X) {
+			qr = X_reg(qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == PAULI_Y) {
+			qr = Y_reg(qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == PAULI_Z) {
+			qr = Z_reg(qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == PHASE) {
+			qr = S_reg(qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == ROTATION) {
+			int angle = atoi((keytypes[i].key + 2));
+			qr = R_reg(angle, qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == HADAMARD) {
+			qr = H_reg(qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == SWAP) {
+			int idx2 = cur_qubit_idx;
+			while(keytypes[i].type != SWAP) idx2++;
+			
+			qr = QSwap_reg(qr, cur_gate_num, idx2);
+		}
+		else if(keytypes[i].type == QFT) {
+			printf("QFT Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
+		}
+		else if(keytypes[i].type == CONTROL) {
+			printf("CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
+		}
+		else if(keytypes[i].type == INV_CONTROL) {
+			printf("INVERSE-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
+		}
+		else if(keytypes[i].type == X_AXIS_CONTROL) {
+			printf("X-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
+		}
+		else if(keytypes[i].type == Y_AXIS_CONTROL) {
+			printf("Y-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
+			exit(0);
+		}
+		else if(keytypes[i].type == IDENTITY) {
+
+		}
+		else if(keytypes[i].type == PRINT) {
+			printf("[!] Cannot use print statement inside a gate.\n");
+			exit(-1);
+		}
+		else {
+			printf("[!] Invalid gate. Use one of the predefined or user defined gates.\n");
+			exit(-1);
+		}
+
+		if(keytypes[i].type != COMMA && keytypes[i].type != IDX_BRACKET_OPEN && keytypes[i].type != IDX_BRACKET_CLOSE) {
+			cur_qubit_idx += 1;
+		}
+		i++;
+	}
 }
 
 #endif
