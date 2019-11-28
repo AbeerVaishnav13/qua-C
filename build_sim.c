@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 		double sec = (double)((int)timeTaken % 60);
 		sec += (timeTaken - (min * 60 + sec));
 
-		printf("\n\nTime taken: %d min, %lf sec\n", min, sec);
+		printf("\nTime taken: %d min, %lf sec\n", min, sec);
 
 		free(input);
 		free(hm);

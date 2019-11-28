@@ -118,7 +118,7 @@ The above code segment has the following meaning:-
         k: power of n'th root of unity (w)
 - Control gate: **@**
 - Inverse Control gate: **o**
-- NOOP Gate: **-**
+- Identity Gate: **-**
 - Pauli Gates
     - Pauli X gate: **X**
     - Pauli Y gate: **Y**
