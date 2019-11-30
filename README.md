@@ -113,9 +113,9 @@ The above code segment has the following meaning:-
 ## List of short-hand gates
 - Hadamard Gate: **H**
 - Phase Gate: **S**
-- Rotation Gate: **R_k**
+- Rotation Gate: **R(k)**
 
-        k: power of n'th root of unity (w)
+        k: rotation angle (in degree)
 - Control gate: **@**
 - Inverse Control gate: **o**
 - Identity Gate: **-**

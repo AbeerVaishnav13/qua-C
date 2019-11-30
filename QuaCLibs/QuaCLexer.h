@@ -49,7 +49,7 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "+")) {insertHM(hm, buf, X_AXIS_CONTROL);}
     else if(!strcmp(buf, "*")) {insertHM(hm, buf, Y_AXIS_CONTROL);}
     else if(!strcmp(buf, "-")) {insertHM(hm, buf, IDENTITY);}
-    else if(buf[0] == 'R' && buf[1] == '_' && isdigit(buf[2])) {insertHM(hm, buf, ROTATION);}
+    else if(!strcmp(buf, "R")) {insertHM(hm, buf, ROTATION);}
     else if(Float) {insertHM(hm, buf, FLOAT_LITERAL);}
     else if(isdigit(buf[0])) {insertHM(hm, buf, INT_LITERAL);}
     else if(buf[0] == '"' || buf[0] == '\'') {
@@ -186,7 +186,8 @@ HashMap* Tokenize(FILE *fp) {
 
                 c = fgetc(fp);
             }
-            // fseek(fp, -1, SEEK_CUR);
+            if(c == ',')
+                fseek(fp, -1, SEEK_CUR);
         }
         else if(GATE_COND_LEX(c)) {
             while(GATE_COND_LEX(c)) {

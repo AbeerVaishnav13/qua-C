@@ -265,7 +265,8 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 			qr = S_reg(qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == ROTATION) {
-			int angle = atoi((keytypes[i].key + 2));
+			double angle = atof(keytypes[i+2].key);
+			i += 3;
 			qr = R_reg(angle, qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == HADAMARD) {
@@ -312,6 +313,7 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 		}
 		else {
 			printf("[!] Invalid gate. Use one of the predefined or user defined gates.\n");
+			printf("found: %s\n", keytypes[i].key);
 			exit(-1);
 		}
 
@@ -364,7 +366,8 @@ void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done) {
 			qr = S_reg(qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == ROTATION) {
-			int angle = atoi((keytypes[i].key + 2));
+			double angle = atof(keytypes[i+2].key);
+			i += 3;
 			qr = R_reg(angle, qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == HADAMARD) {

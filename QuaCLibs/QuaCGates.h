@@ -212,19 +212,18 @@ quBit R(double angle, quBit x) {
 	return qb;
 }
 
-quReg* R_reg(double angle, quReg *qr, int idx) {
-	qr->qb[idx] = R(angle, qr->qb[idx]);
-
+quReg* R_reg(double angle_deg, quReg *qr, int idx) {
 	int size = pow(2, qr->size);
+	double angle_rad = angle_deg / 180 * PI;
 
-	printf("%lf\n", angle);
+	qr->qb[idx] = R(angle_rad, qr->qb[idx]);
 
 	for(int i = 0; i < size; i++) {
 		if(i & (1 << idx)) {
 			double temp_real = qr->matrix[i].real;
 			double temp_imag = qr->matrix[i].imag;
-			qr->matrix[i].real = temp_real * cos(angle) - temp_imag * sin(angle);
-			qr->matrix[i].imag = temp_real * sin(angle) + temp_imag * cos(angle);
+			qr->matrix[i].real = temp_real * cos(angle_rad) - temp_imag * sin(angle_rad);
+			qr->matrix[i].imag = temp_real * sin(angle_rad) + temp_imag * cos(angle_rad);
 		}
 	}
 
@@ -260,7 +259,6 @@ void Hadamard(quReg *qr, int first, int second) {
 }
 
 quReg* H_reg(quReg *qr, int idx) {
-
 	qr->qb[idx] = H(qr->qb[idx]);
 
 	const int mat_size = pow(2, qr->size);
@@ -280,7 +278,6 @@ quReg* H_reg(quReg *qr, int idx) {
 		}
 	}
 
-	
 	return qr;
 }
 

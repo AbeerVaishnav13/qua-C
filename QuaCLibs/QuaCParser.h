@@ -50,28 +50,28 @@ qr.Pnz()
 CONTEXT FREE GRAMMER !!! (CFG)
 ////////////////////////////////////////
 
-P -> F N D P | G N QA D P | I                               DONE
-F -> func                                                   DONE
-G -> gate                                                   DONE
-QA -> [ num ]                                               DONE
-N -> alnum                                                  DONE
-D -> { C }                                                  DONE
-C -> [ Gate ] C | PRINT_COND C | e                          DONE
-Gate -> GATE_COND , Gate| GATE_COND                         DONE
+P -> F N D P | G N QA D P | I                                                           DONE
+F -> func                                                                               DONE
+G -> gate                                                                               DONE
+QA -> [ num ]                                                                           DONE
+N -> alnum                                                                              DONE
+D -> { C }                                                                              DONE
+C -> [ Gate ] C | PRINT_COND C | e                                                      DONE
+Gate -> GATE_COND , Gate | GATE_COND (FLOAT_LITERAL), Gate | GATE_COND                          DONE
 
-I -> Q N E Exp NL                                           DONE
-Exp -> New Q Size Name | alnum | String                     DONE
-Q -> quReg                                                  DONE
-New -> new                                                  DONE
-E -> =                                                      DONE
-Size -> [ alnum ]                                           DONE
-Name -> => String | e                                       DONE
-String -> ' chars ' | " chars " | ' ' | " "                 DONE
+I -> Q N E Exp NL                                                                       DONE
+Exp -> New Q Size Name | alnum | String                                                 DONE
+Q -> quReg                                                                              DONE
+New -> new                                                                              DONE
+E -> =                                                                                  DONE
+Size -> [ alnum ]                                                                       DONE
+Name -> => String | e                                                                   DONE
+String -> ' chars ' | " chars " | ' ' | " "                                             DONE
 
-NL -> N Dot Param NL | I | e                                DONE
-Dot -> .                                                    DONE
-Param -> N Paranthesis | PRINT_COND                         DONE
-Paranthesis -> ( ) | ( alnum ) | e                          DONE
+NL -> N Dot Param NL | I | e                                                            DONE
+Dot -> .                                                                                DONE
+Param -> N Paranthesis | PRINT_COND                                                     DONE
+Paranthesis -> ( ) | ( alnum ) | e                                                      DONE
 
 
 ////////////////////////////////////////
@@ -85,7 +85,7 @@ QA -> IDX_BRACKET_OPEN (IDENTIFIER or INT_LITERAL) IDX_BRACKET_CLOSE
 N -> IDENTIFIER
 D -> CMPND_STMT_OPEN C CMPND_STMT_CLOSE
 C -> IDX_BRACKET_OPEN G IDX_BRACKET_CLOSE C | PRINT_COND C | e
-Gate -> GATE_COND COMMA Gate| GATE_COND
+Gate -> GATE_COND COMMA Gate | GATE_COND EXPR_PARANTHESIS_OPEN FLOAT_LITERAL EXPR_PARANTHESIS_OPEN COMMA Gate | GATE_COND
 
 I -> Q N E Exp NL
 Exp -> New Q Size Name | IDENTIFIER | STRING_LITERAL
@@ -293,6 +293,30 @@ void Gate() { // Gates
         }
         else
             i++;
+
+        if(input[i] == EXPR_PARANTHESIS_OPEN) {
+            i++;
+            if(input[i] == FLOAT_LITERAL || input[i] == INT_LITERAL) {
+                i++;
+                if(input[i] == EXPR_PARANTHESIS_CLOSE) {
+                    i++;
+                    if(input[i] == COMMA) {
+                        i++;
+                        Gate();
+                    }
+                    else
+                        return;
+                }
+                else {
+                    error = -30;
+                    printf("[!] Expected a closing paranthesis. [%d]\n", error);
+                }
+            }
+            else {
+                error = -29;
+                printf("[!] Expected a float ot integer literal within the paranthesis. [%d]\n", error);
+            }
+        }
 
         if(input[i] == COMMA) {
             i++;
