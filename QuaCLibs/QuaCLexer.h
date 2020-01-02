@@ -9,8 +9,8 @@
 #define GATE_COND_LEX(c) (c == 'X' || c == 'Y' || c == 'Z' || c == 'H' || \
                       c == 'R' || c == '_' || c == '.' || isdigit(c) || \
                       c == 'x' || c == '~' || c == '@' || c == 'o' || \
-                      c == '^' || c == '+' || c == '*' || isalnum(c) || \
-                      c == '-')
+                      c == '^' || c == '*' || isalnum(c) || c == '-' || \
+                      c == '/')
 
 void assignType(HashMap *hm, char buf[]) {
     bool Float = false;
@@ -46,10 +46,13 @@ void assignType(HashMap *hm, char buf[]) {
     else if(!strcmp(buf, "@")) {insertHM(hm, buf, CONTROL);}
     else if(!strcmp(buf, "o")) {insertHM(hm, buf, INV_CONTROL);}
     else if(!strcmp(buf, "^")) {insertHM(hm, buf, POWER);}
-    else if(!strcmp(buf, "+")) {insertHM(hm, buf, X_AXIS_CONTROL);}
-    else if(!strcmp(buf, "*")) {insertHM(hm, buf, Y_AXIS_CONTROL);}
     else if(!strcmp(buf, "-")) {insertHM(hm, buf, IDENTITY);}
-    else if(!strcmp(buf, "R")) {insertHM(hm, buf, ROTATION);}
+    else if(!strcmp(buf, "Rx")) {insertHM(hm, buf, ROTATION_X);}
+    else if(!strcmp(buf, "Ry")) {insertHM(hm, buf, ROTATION_Y);}
+    else if(!strcmp(buf, "Rz")) {insertHM(hm, buf, ROTATION_Z);}
+    else if(!strcmp(buf, "pi")) {insertHM(hm, buf, MATH_PI);}
+    else if(!strcmp(buf, "/")) {insertHM(hm, buf, DIVISION);}
+    else if(!strcmp(buf, "*")) {insertHM(hm, buf, MULTIPLICATION);}
     else if(Float) {insertHM(hm, buf, FLOAT_LITERAL);}
     else if(isdigit(buf[0])) {insertHM(hm, buf, INT_LITERAL);}
     else if(buf[0] == '"' || buf[0] == '\'') {

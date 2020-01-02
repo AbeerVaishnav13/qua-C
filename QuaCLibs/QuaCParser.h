@@ -2,9 +2,9 @@
 #define QUANTUM_PARSER_H
 
 #define GATE_COND_PARSE(c) (c == PAULI_X || c == PAULI_Y || c == PAULI_Z || c == HADAMARD || \
-                      c == ROTATION || c == SWAP || c == QFT || c == CONTROL || c == INV_CONTROL || \
-                      c == POWER || c == X_AXIS_CONTROL || c == Y_AXIS_CONTROL || c == IDENTITY || \
-                      c == PHASE || c == IDENTIFIER)
+                      c == ROTATION_X || c == ROTATION_Y || c == ROTATION_Z || c == SWAP || c == QFT || \
+                      c == CONTROL || c == INV_CONTROL || c == POWER || c == IDENTITY || c == PHASE || \
+                      c == IDENTIFIER)
 
 /*
 ////////////////////////////////////////
@@ -264,6 +264,24 @@ void C() { // Columns
     }
 }
 
+void Test_exp() {
+    if(input[i] == DIVISION || input[i] == MULTIPLICATION) {
+        i++;
+        if(input[i] == MATH_PI || input[i] == FLOAT_LITERAL || input[i] == INT_LITERAL) {
+            i++;
+            Test_exp();
+        }
+        else {
+            error = -31;
+            printf("[!] Expected literal or constant after arithmetic operator. [%d]\n", error);
+        }
+    }
+    else if(input[i] == MATH_PI || input[i] == FLOAT_LITERAL || input[i] == INT_LITERAL) {
+        error = -32;
+        printf("[!] Expected arithmetic operator between two operands. [%d]\n", error);
+    }
+}
+
 // Gate -> alnum , Gate| alnum
 void Gate() { // Gates
     if(GATE_COND_PARSE(input[i])) {
@@ -296,8 +314,9 @@ void Gate() { // Gates
 
         if(input[i] == EXPR_PARANTHESIS_OPEN) {
             i++;
-            if(input[i] == FLOAT_LITERAL || input[i] == INT_LITERAL) {
+            if(input[i] == MATH_PI || input[i] == FLOAT_LITERAL || input[i] == INT_LITERAL) {
                 i++;
+                Test_exp();
                 if(input[i] == EXPR_PARANTHESIS_CLOSE) {
                     i++;
                     if(input[i] == COMMA) {

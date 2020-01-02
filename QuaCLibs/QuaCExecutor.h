@@ -93,6 +93,7 @@ QuregMap* getQureg(char *identifier, QuregMap *qmap) {
 void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size, quReg *qr, QuregMap *qm);
 void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done);
 void executePrint(char *cmd, quReg *qr, QuregMap *qm);
+double extract_angle(KeyTypes *keytypes, int i);
 
 void RunProgram(KeyTypes *kt) {
 	printf("Executing program...\n");
@@ -230,6 +231,49 @@ void executePrint(char *cmd, quReg *qr, QuregMap *qm) {
 	}
 }
 
+double extract_angle(KeyTypes *keytypes, int i) {
+	double angle;
+	if(keytypes[i].type == INT_LITERAL || keytypes[i].type == FLOAT_LITERAL)
+		angle = atof(keytypes[i].key);
+	else if(keytypes[i].type == MATH_PI)
+		angle = PI;
+
+	i++;
+
+	for( ; keytypes[i].type != EXPR_PARANTHESIS_CLOSE; i+=2) {
+		switch(keytypes[i].type) {
+			case MULTIPLICATION:
+				switch(keytypes[i+1].type) {
+					case FLOAT_LITERAL:
+					case INT_LITERAL:
+						angle *= atof(keytypes[i+1].key); break;
+
+					case MATH_PI:
+						angle *= PI; break;
+
+					default: ;
+				}
+				break;
+
+			case DIVISION:
+				switch(keytypes[i+1].type) {
+					case FLOAT_LITERAL:
+					case INT_LITERAL:
+						angle /= atof(keytypes[i+1].key); break;
+
+					case MATH_PI:
+						angle /= PI; break;
+
+					default: ;
+				}
+				break;
+
+			default: ;
+		}
+	}
+	return angle;
+}
+
 void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size, quReg *qr, QuregMap *qm) {
 	int cur_gate_num = 0;
 	int ret_i_val_func = 0;
@@ -248,6 +292,7 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 		}
 
 		if(keytypes[i].type == COMMA) {
+
 		}
 		else if(keytypes[i].type == IDX_BRACKET_CLOSE || keytypes[i].type == IDX_BRACKET_OPEN || keytypes[i].type == CMPND_STMT_CLOSE) {
 			cur_gate_num = 0;
@@ -264,17 +309,29 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 		else if(keytypes[i].type == PHASE) {
 			qr = S_reg(qr, cur_gate_num);
 		}
-		else if(keytypes[i].type == ROTATION) {
-			double angle = atof(keytypes[i+2].key);
-			i += 3;
-			qr = R_reg(angle, qr, cur_gate_num);
+		else if(keytypes[i].type == ROTATION_X) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Rx_reg(angle, qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == ROTATION_Y) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Ry_reg(angle, qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == ROTATION_Z) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Rz_reg(angle, qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == HADAMARD) {
 			qr = H_reg(qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == SWAP) {
-			int idx2 = cur_gate_num;
-			while(keytypes[i].type != SWAP) idx2++;
+			int idx2 = cur_gate_num+1;
+			i++;
+			while(keytypes[i].type != SWAP) {idx2++; i++;}
+			idx2 /= 2;
 			
 			qr = QSwap_reg(qr, cur_gate_num, idx2);
 		}
@@ -288,14 +345,6 @@ void executeFunc(KeyTypes *keytypes, IdentifierMap *gates, int i, int qureg_size
 		}
 		else if(keytypes[i].type == INV_CONTROL) {
 			printf("INVERSE-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
-			exit(0);
-		}
-		else if(keytypes[i].type == X_AXIS_CONTROL) {
-			printf("X-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
-			exit(0);
-		}
-		else if(keytypes[i].type == Y_AXIS_CONTROL) {
-			printf("Y-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
 			exit(0);
 		}
 		else if(keytypes[i].type == IDENTITY) {
@@ -349,6 +398,7 @@ void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done) {
 		cur_gate_num = gates_done + cur_qubit_idx;
 
 		if(keytypes[i].type == COMMA) {
+
 		}
 		else if(keytypes[i].type == IDX_BRACKET_CLOSE || keytypes[i].type == IDX_BRACKET_OPEN || keytypes[i].type == CMPND_STMT_CLOSE) {
 			cur_qubit_idx = 0;
@@ -365,10 +415,20 @@ void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done) {
 		else if(keytypes[i].type == PHASE) {
 			qr = S_reg(qr, cur_gate_num);
 		}
-		else if(keytypes[i].type == ROTATION) {
-			double angle = atof(keytypes[i+2].key);
-			i += 3;
-			qr = R_reg(angle, qr, cur_gate_num);
+		else if(keytypes[i].type == ROTATION_X) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Rx_reg(angle, qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == ROTATION_Y) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Ry_reg(angle, qr, cur_gate_num);
+		}
+		else if(keytypes[i].type == ROTATION_Z) {
+			double angle = extract_angle(keytypes, i+2);
+			while(keytypes[i].type != EXPR_PARANTHESIS_CLOSE) i++;
+			qr = Rz_reg(angle, qr, cur_gate_num);
 		}
 		else if(keytypes[i].type == HADAMARD) {
 			qr = H_reg(qr, cur_gate_num);
@@ -389,14 +449,6 @@ void executeGate(KeyTypes *keytypes, int i, quReg *qr, int gates_done) {
 		}
 		else if(keytypes[i].type == INV_CONTROL) {
 			printf("INVERSE-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
-			exit(0);
-		}
-		else if(keytypes[i].type == X_AXIS_CONTROL) {
-			printf("X-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
-			exit(0);
-		}
-		else if(keytypes[i].type == Y_AXIS_CONTROL) {
-			printf("Y-AXIS-CONTROL Gate: This functionality is not added right now. Please wait for the next version to use this.\n");
 			exit(0);
 		}
 		else if(keytypes[i].type == IDENTITY) {

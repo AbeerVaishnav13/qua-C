@@ -19,6 +19,9 @@ typedef enum t {
     NEW, // new
     PRINT, // print, NON_ZERO, ALL
     QUREG, // quReg
+    MATH_PI, // PI constant (π)
+    DIVISION, // (/)
+    MULTIPLICATION, // (*)
 
     // OPERATORS
     REG_NAME, // (=>)
@@ -29,21 +32,21 @@ typedef enum t {
     PAULI_Y, // Y
     PAULI_Z, // Z
     PHASE, // S
-    ROTATION, // R
+    ROTATION_X, // Rx
+    ROTATION_Y, // Ry
+    ROTATION_Z, // Rz
     HADAMARD, // H
     SWAP, // x
     QFT, // ~
     CONTROL, // @
     INV_CONTROL, // o
     POWER, // ^
-    X_AXIS_CONTROL, // +
-    Y_AXIS_CONTROL, // *
     IDENTITY, // -
 
     LIST_END
 }Type;
 
-char Types_str[34][23] = {
+char Types_str[37][23] = {
     // CLASSES
     "IDENTIFIER", // function/variable name
     "INT_LITERAL", // integer number
@@ -61,6 +64,9 @@ char Types_str[34][23] = {
     "NEW", // new
     "PRINT", // print statement
     "QUREG", // quReg
+    "MATH_PI", // PI constant (π)
+    "DIVISION", // (/)
+    "MULTIPLICATION", // (*)
 
     // OPERATORS
     "REG_NAME", // (=>)
@@ -71,15 +77,15 @@ char Types_str[34][23] = {
     "PAULI_Y", // Y
     "PAULI_Z", // Z
     "PHASE", // S
-    "ROTATION", // R
+    "ROTATION_X", // Rx
+    "ROTATION_Y", // Ry
+    "ROTATION_Z", // Rz
     "HADAMARD", // H
     "SWAP", // x
     "QFT", // ~
     "CONTROL", // @
     "INV_CONTROL", // o
     "POWER", // ^
-    "X_AXIS_CONTROL", // +
-    "Y_AXIS_CONTROL", // *
     "IDENTITY", // -
 
     "LIST_END",
