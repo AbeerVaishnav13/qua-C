@@ -33,6 +33,3 @@ q.Pnz()
 # QFT: ~
 # Control: @
 # Inverse Control: o
-# Power: <gate> ^ <num>    (optional)
-# X-axis control: +
-# Y-axis control: *
