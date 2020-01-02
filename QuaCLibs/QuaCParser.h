@@ -95,7 +95,8 @@ E -> EQUALS
 Size -> IDX_BRACKET_OPEN (IDENTIFIER or INT_LITERAL) IDX_BRACKET_CLOSE
 Name -> REG_NAME STRING_LITERAL | e
 
-NL -> N Dot Param NL | I | e
+NL -> N FORI | I | e
+FORI -> Dot Param NL | Paranthesis NL
 Dot -> DOT
 Param -> N Paranthesis | PRINT_COND
 Paranthesis -> EXPR_PARANTHESIS_OPEN EXPR_PARANTHESIS_CLOSE | EXPR_PARANTHESIS_OPEN (IDENTIFIER or INT_LITERAL) EXPR_PARANTHESIS_CLOSE | e
@@ -123,6 +124,7 @@ void Name(); // qureg name
 void String(); // parse any string
 
 void NL(); // next line
+void FORI(); // Function or Identifier
 void Dot(); // a dot
 void Param(); // specifying a param for qr
 void Paranthesis(); // For giving paranthesis
@@ -455,14 +457,23 @@ void NL() { // next line
     }
     else if(input[i] == IDENTIFIER) {
         N();
-        Dot();
-        Param();
-        NL();
+        FORI();
     }
     else {
         error = -22;
         printf("[!] Incorrect syntax. Expected a datatype or variable identifier. [%d]\n", error);
     }
+}
+
+void FORI() {
+    if(input[i] == DOT) {
+        Dot();
+        Param();
+    }
+    else if(input[i] == EXPR_PARANTHESIS_OPEN) {
+        Paranthesis();
+    }
+    NL();
 }
 
 // Dot -> .
